@@ -1535,7 +1535,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   computeShader: {fileID: 7200000, guid: 35ab4d783fbb5004a83c3237bc15fa7c, type: 3}
-  renderMaterial: {fileID: 2100000, guid: 9b0bb27c75f1712478f5e37817b078a9, type: 2}
+  mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  shader: {fileID: 4800000, guid: 90b855529a34f374bbb62cc4287881bc, type: 3}
 --- !u!1 &803988332
 GameObject:
   m_ObjectHideFlags: 0
@@ -1673,7 +1674,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_BackGroundColor: {r: 0, g: 0.066513136, b: 0.4056604, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -5080,6 +5081,14 @@ PrefabInstance:
     - target: {fileID: 2630871107191660980, guid: d443015f506fbf147882e9a012f55092, type: 3}
       propertyPath: m_Value
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2630871107191660980, guid: d443015f506fbf147882e9a012f55092, type: 3}
+      propertyPath: m_MaxValue
+      value: 2000
+      objectReference: {fileID: 0}
+    - target: {fileID: 2630871107191660980, guid: d443015f506fbf147882e9a012f55092, type: 3}
+      propertyPath: m_MinValue
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 2630871107191660980, guid: d443015f506fbf147882e9a012f55092, type: 3}
       propertyPath: m_Colors.m_PressedColor.b

@@ -6,37 +6,80 @@ namespace Simulation
     public class GalaxySimulationGPU : MonoBehaviour
     {
         bool simulationStarted = false;
-        [SerializeField] ComputeShader computeShader;
+        [SerializeField] private ComputeShader computeShader;
         [SerializeField] private ComputeBuffer starsBuffer;
-        [SerializeField] private Material renderMaterial;
-        [SerializeField] private Texture2D circleTexture; // Ensure this is set in the Unity Editor
-        bool render=false;
+        bool render = false;
         private int kernel;
         int starCount;
         SimulationParameter simulationParameter;
 
-        // Start is called before the first frame update
+        private Bounds bounds;
+        public Mesh mesh;
+        public Shader shader;
+        Material material;
+
+        public ComputeBuffer argsBuffer;
+        Texture2D gradientTexture;
+
+        private void Start()
+        {
+
+        }
+
+
+
+        public static void TextureFromGradient(ref Texture2D texture, int width, FilterMode filterMode = FilterMode.Bilinear)
+        {
+            if (texture == null)
+            {
+                texture = new Texture2D(width, 1);
+            }
+            else if (texture.width != width)
+            {
+                texture.Reinitialize(width, 1);
+            }
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = filterMode;
+
+            texture.Apply();
+        }
+
+        public static ComputeBuffer CreateArgsBuffer(Mesh mesh, int numInstances)
+        {
+            const int subMeshIndex = 0;
+            uint[] args = new uint[5];
+            args[0] = (uint)mesh.GetIndexCount(subMeshIndex);
+            args[1] = (uint)numInstances;
+            args[2] = (uint)mesh.GetIndexStart(subMeshIndex);
+            args[3] = (uint)mesh.GetBaseVertex(subMeshIndex);
+            args[4] = 0; // offset
+
+            ComputeBuffer argsBuffer = new ComputeBuffer(1, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
+            argsBuffer.SetData(args);
+            return argsBuffer;
+        }
+        // This method is called to start the simulation
         public void Spawn()
         {
-            Delete();
+            Delete(); // Clean up any existing resources
 
             simulationParameter = GlobalManager.Instance.SimulationParameter;
 
             starCount = (int)simulationParameter.BodiesCount;
 
             SetupShader(starCount);
-            InitStarsAttribute(starCount, simulationParameter.TimeStep, simulationParameter.SmoothingLength, 
+            InitStarsAttribute(starCount, simulationParameter.TimeStep, simulationParameter.SmoothingLength,
                 simulationParameter.InteractionRate, simulationParameter.BlackHoleMass);
             InitStarsPos(simulationParameter);
 
-            renderMaterial.SetColor("colorStart", simulationParameter.Color.colorStart);
-            renderMaterial.SetColor("colorEnd", simulationParameter.Color.colorEnd);
-            renderMaterial.SetFloat("divider", simulationParameter.Color.divider);
-            renderMaterial.SetFloat("_Size", 1.0f);  // Adjust size as needed
-            renderMaterial.SetTexture("_SpriteTex", circleTexture); // Set the texture to be used for rendering circles
+            material = new Material(shader);
+            material.SetBuffer("particuleBuffer", starsBuffer);
+            bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+            argsBuffer = CreateArgsBuffer(mesh, starCount);
 
             simulationStarted = true;
             render = true;
+
         }
 
         void Update()
@@ -49,14 +92,26 @@ namespace Simulation
             }
         }
 
+        void LateUpdate()
+        {
+            if (simulationStarted)
+            {
+                TextureFromGradient(ref gradientTexture, 256);
+                material.SetTexture("ColourMap", gradientTexture);
+                Graphics.DrawMeshInstancedIndirect(mesh, 0, material, bounds, argsBuffer);
+
+
+            }
+        }
+
         void RunComputeShader()
         {
-            computeShader.Dispatch(kernel, starCount / 128 + 1, 1, 1);
+            computeShader.Dispatch(kernel, starCount / 128 + 1, 1, 1); // Dispatch the compute shader
         }
 
         void UpdateDynamicParameter(float smoothingLength, float interactionRate, float blackHoleMass, float timeStep)
         {
-            computeShader.SetFloat("deltaTime", timeStep);
+            computeShader.SetFloat("deltaTime", timeStep); // Update the time step dynamically
         }
 
         public void SetupShader(int n)
@@ -64,34 +119,24 @@ namespace Simulation
             kernel = computeShader.FindKernel("UpdateParticules");
             if (kernel == -1)
             {
-                Debug.LogError("Kernel 'UpdateParticules' not found in the compute shader.");
+                Debug.LogError("Kernel 'UpdateParticles' not found in the compute shader.");
                 return;
             }
 
-            int bufferStride = sizeof(float) * 5; // Adjust according to your particle structure
+            int bufferStride = sizeof(float) * 5; // Assuming each particle has 5 floats
             starsBuffer = new ComputeBuffer(starCount, bufferStride);
             computeShader.SetBuffer(kernel, "particules", starsBuffer);
         }
 
         public void InitStarsAttribute(int n, float deltaTime, float smoothingLength, float interactionRate, float blackHoleMass)
         {
-            computeShader.SetInt("particuleCount", n);
+            computeShader.SetInt("particleCount", n);
             computeShader.SetFloat("deltaTime", deltaTime);
         }
 
         public void InitStarsPos(SimulationParameter parameter)
         {
             starsBuffer.SetData(BodiesInitializerFactory.Create(parameter).InitStars());
-        }
-
-        private void OnRenderObject()
-        {
-            if (render)
-            {
-                renderMaterial.SetBuffer("particules", starsBuffer);
-                renderMaterial.SetPass(0);
-                Graphics.DrawProceduralNow(MeshTopology.Quads, starCount * 4);
-            }
         }
 
         public void Delete()

@@ -27,7 +27,7 @@ namespace Simulation
                 star.position =InsideRectangle(base.border);
                 star.velocity = RandomVelocity(base.initialVelocity);
                 Debug.Log(star.position);
-                star.radius=20f;
+                star.radius=10f;
                 data[i] = star;
             }
             return data;
@@ -44,7 +44,7 @@ namespace Simulation
         {
             float x = Random.Range(-initialVelocity, initialVelocity);
             float y = Random.Range(-initialVelocity, initialVelocity);
-            return new Vector2(x, y).normalized;
+            return new Vector2(x, y).normalized*20f;
         }
     
     }
