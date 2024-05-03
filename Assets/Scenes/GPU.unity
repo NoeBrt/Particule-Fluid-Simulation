@@ -1721,14 +1721,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 2108, z: -10}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2943,7 +2943,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DefaultsList:
-  - bodiesCount: 150000
+  - bodiesCount: 100
     radius: 272
     thickness: 10
     initialVelocity: 100
@@ -2955,6 +2955,7 @@ MonoBehaviour:
       colorStart: {r: 0, g: 0, b: 0.8, a: 0.8509804}
       colorEnd: {r: 0.5, g: 0, b: 1, a: 0.8509804}
       divider: 200
+    border: {x: 1000, y: 1000}
   - bodiesCount: 200000
     radius: 230
     thickness: 10
@@ -2967,6 +2968,7 @@ MonoBehaviour:
       colorStart: {r: 0, g: 0, b: 1, a: 0.8}
       colorEnd: {r: 1, g: 0.5, b: 0, a: 0.8509804}
       divider: 200
+    border: {x: 1000, y: 1000}
   - bodiesCount: 500000
     radius: 1320
     thickness: 0
@@ -2979,6 +2981,7 @@ MonoBehaviour:
       colorStart: {r: 0.2, g: 0, b: 1, a: 0.68235296}
       colorEnd: {r: 1, g: 0.1, b: 0.1, a: 0.69411767}
       divider: 30
+    border: {x: 1000, y: 1000}
 --- !u!114 &1303046374 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3923520453948538409, guid: d443015f506fbf147882e9a012f55092, type: 3}

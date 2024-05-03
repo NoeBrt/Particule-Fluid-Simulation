@@ -14,6 +14,7 @@ namespace Simulation
     public class SimulationParameter : MonoBehaviour
     {
 
+        public Vector2 Border{get; set;}
         public float BodiesCount{get; set;}
 
         public float Radius{get; set;}
@@ -36,6 +37,8 @@ namespace Simulation
             this.simulationType = (SimulationType)simulationType;
             SimulationDefaults defaults = GlobalManager.Instance.DefaultsList[simulationType];
             Color = defaults.color;
+            Border= defaults.border;
+            
 
         }
 

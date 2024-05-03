@@ -11,10 +11,14 @@ namespace Simulation
       protected float initialVelocity;
       protected int bodiesCount;
 
+      protected Vector2 border;
+
         public BodiesInitializer(SimulationParameter simulationParameter)
         {
             this.initialVelocity =simulationParameter.InitialVelocity;
             this.bodiesCount =(int)simulationParameter.BodiesCount;
+            this.border = simulationParameter.Border;
+            Debug.Log("BORDER "+border);
         }
 
         public virtual Particule[] InitStars(){

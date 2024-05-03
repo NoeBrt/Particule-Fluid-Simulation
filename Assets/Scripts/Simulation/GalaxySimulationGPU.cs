@@ -1,30 +1,18 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.Rendering;
-using Simulation.Struct;
-
 
 namespace Simulation
 {
-
-
     public class GalaxySimulationGPU : MonoBehaviour
     {
         bool simulationStarted = false;
         [SerializeField] ComputeShader computeShader;
-
+        [SerializeField] private ComputeBuffer starsBuffer;
+        [SerializeField] private Material renderMaterial;
+        [SerializeField] private Texture2D circleTexture; // Ensure this is set in the Unity Editor
+        bool render=false;
         private int kernel;
-        [SerializeField]
-        private ComputeBuffer starsBuffer;
-
         int starCount;
-
-        [SerializeField]
-        private Material renderMaterial;
-
-        private bool render = false;
         SimulationParameter simulationParameter;
 
         // Start is called before the first frame update
@@ -34,26 +22,21 @@ namespace Simulation
 
             simulationParameter = GlobalManager.Instance.SimulationParameter;
 
-
-            float galaxyRadius = simulationParameter.Radius;
-            float galaxyThickness = simulationParameter.Thickness;
-            float starInitialVelocity = simulationParameter.InitialVelocity;
             starCount = (int)simulationParameter.BodiesCount;
-            float smoothingLenght = simulationParameter.SmoothingLength;
-            float blackHoleMass = simulationParameter.BlackHoleMass;
-            float interactionRate = simulationParameter.InteractionRate;
-            float timeStep = simulationParameter.TimeStep;
 
             SetupShader(starCount);
-            InitStarsAttribute(starCount, timeStep, smoothingLenght, interactionRate, blackHoleMass);
+            InitStarsAttribute(starCount, simulationParameter.TimeStep, simulationParameter.SmoothingLength, 
+                simulationParameter.InteractionRate, simulationParameter.BlackHoleMass);
             InitStarsPos(simulationParameter);
+
             renderMaterial.SetColor("colorStart", simulationParameter.Color.colorStart);
             renderMaterial.SetColor("colorEnd", simulationParameter.Color.colorEnd);
             renderMaterial.SetFloat("divider", simulationParameter.Color.divider);
+            renderMaterial.SetFloat("_Size", 1.0f);  // Adjust size as needed
+            renderMaterial.SetTexture("_SpriteTex", circleTexture); // Set the texture to be used for rendering circles
 
             simulationStarted = true;
             render = true;
-
         }
 
         void Update()
@@ -61,46 +44,39 @@ namespace Simulation
             if (simulationStarted)
             {
                 RunComputeShader();
-                UpdateDynamicParameter(simulationParameter.SmoothingLength, simulationParameter.InteractionRate, simulationParameter.BlackHoleMass,simulationParameter.TimeStep);
+                UpdateDynamicParameter(simulationParameter.SmoothingLength, simulationParameter.InteractionRate,
+                    simulationParameter.BlackHoleMass, simulationParameter.TimeStep);
             }
         }
+
         void RunComputeShader()
         {
             computeShader.Dispatch(kernel, starCount / 128 + 1, 1, 1);
         }
-        void UpdateDynamicParameter(float smoothingLenght, float interactionRate, float blackHoleMass,float timeStep)
+
+        void UpdateDynamicParameter(float smoothingLength, float interactionRate, float blackHoleMass, float timeStep)
         {
-            computeShader.SetFloat("smoothingLenght", smoothingLenght);
-            computeShader.SetFloat("interactionRate", interactionRate);
-            computeShader.SetFloat("blackHoleMass", blackHoleMass);
-            computeShader.SetFloat("deltaTime",timeStep);
+            computeShader.SetFloat("deltaTime", timeStep);
         }
 
         public void SetupShader(int n)
         {
-            try
+            kernel = computeShader.FindKernel("UpdateParticules");
+            if (kernel == -1)
             {
-                kernel = computeShader.FindKernel("UpdateStars");
+                Debug.LogError("Kernel 'UpdateParticules' not found in the compute shader.");
+                return;
             }
-            catch
-            {
-                Debug.Log("kernel not found");
-            }
-            int bufferStride = sizeof(float) * 6;
-            starsBuffer = new ComputeBuffer(starCount, bufferStride);
-            computeShader.SetBuffer(kernel, "star", starsBuffer);
 
+            int bufferStride = sizeof(float) * 5; // Adjust according to your particle structure
+            starsBuffer = new ComputeBuffer(starCount, bufferStride);
+            computeShader.SetBuffer(kernel, "particules", starsBuffer);
         }
 
-        public void InitStarsAttribute(int n, float deltaTime, float smoothingLenght, float interactionRate, float blackHoleMass)
+        public void InitStarsAttribute(int n, float deltaTime, float smoothingLength, float interactionRate, float blackHoleMass)
         {
-            computeShader.SetInt("starCount", n);
+            computeShader.SetInt("particuleCount", n);
             computeShader.SetFloat("deltaTime", deltaTime);
-            computeShader.SetFloat("smoothingLenght", smoothingLenght);
-            computeShader.SetFloat("interactionRate", interactionRate);
-            computeShader.SetFloat("blackHoleMass", blackHoleMass);
-
-
         }
 
         public void InitStarsPos(SimulationParameter parameter)
@@ -108,25 +84,25 @@ namespace Simulation
             starsBuffer.SetData(BodiesInitializerFactory.Create(parameter).InitStars());
         }
 
-
         private void OnRenderObject()
         {
             if (render)
             {
-                renderMaterial.SetBuffer("starBuffer", starsBuffer);
-                // Render the stars
+                renderMaterial.SetBuffer("particules", starsBuffer);
                 renderMaterial.SetPass(0);
-                Graphics.DrawProceduralNow(MeshTopology.Points, starCount);
+                Graphics.DrawProceduralNow(MeshTopology.Quads, starCount * 4);
             }
         }
 
         public void Delete()
         {
             if (starsBuffer != null)
+            {
                 starsBuffer.Dispose();
+                starsBuffer = null;
+            }
             simulationStarted = false;
             render = false;
         }
-
     }
 }

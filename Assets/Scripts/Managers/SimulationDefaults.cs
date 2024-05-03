@@ -14,6 +14,7 @@ public class SimulationDefaults
     public float interactionRate;
     public float timeStep;
     public DynamicColor color;
+    public Vector2 border;
 
 
 }

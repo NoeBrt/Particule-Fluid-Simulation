@@ -12,14 +12,10 @@ namespace Simulation
         {
             switch (simulationParameter.simulationType)
             {
-                case SimulationType.Universe:
-                    return new UniverseInitializer(simulationParameter);
                 case SimulationType.Galaxy:
                     return new GalaxyInitializer(simulationParameter);
-                case SimulationType.Collision:
-                    return new CollisionInitializer(simulationParameter);
                 default:
-                    throw new Exception("Initializer type not found");
+                    return new GalaxyInitializer(simulationParameter);
             }
 
         }

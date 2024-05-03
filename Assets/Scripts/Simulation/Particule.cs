@@ -8,7 +8,8 @@ namespace Simulation.Struct
 {
    public struct Particule
     {
-        public Vector3 position;
-        public Vector3 velocity;
+        public Vector2 position;
+        public Vector2 velocity;
+        public float radius;
     }
 }
